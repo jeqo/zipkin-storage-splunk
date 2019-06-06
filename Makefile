@@ -50,6 +50,6 @@ run-local:
 
 .PHONY: zipkin-test
 zipkin-test:
-	curl -s https://raw.githubusercontent.com/openzipkin/zipkin/master/zipkin-ui/testdata/netflix.json | \
+	curl -s https://raw.githubusercontent.com/openzipkin/zipkin-classic/master/testdata/netflix.json | \
 	curl -X POST -s localhost:9411/api/v2/spans -H'Content-Type: application/json' -d @- ; \
 	${OPEN} 'http://localhost:9411/zipkin/?lookback=custom&startTs=1'

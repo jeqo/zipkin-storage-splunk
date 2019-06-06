@@ -23,6 +23,8 @@ import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import zipkin2.Call;
 import zipkin2.Callback;
 import zipkin2.DependencyLink;
@@ -35,6 +37,8 @@ import static java.nio.charset.StandardCharsets.UTF_8;
 import static zipkin2.storage.splunk.SplunkStorage.DECODER;
 
 public class SplunkSpanStore implements SpanStore, ServiceAndSpanNames {
+
+  static final Logger LOG = LoggerFactory.getLogger(SplunkSpanStore.class);
 
   final SplunkStorage storage;
 
@@ -49,39 +53,42 @@ public class SplunkSpanStore implements SpanStore, ServiceAndSpanNames {
         + " latest=" + (request.endTs() / 1000) + ""
         + " | transaction traceId | ";
     String endQuery = " head " + request.limit();
-    StringBuilder query = new StringBuilder(startQuery);
-    if (request.serviceName() != null) {
-      query.append(" where \'localEndpoint.serviceName\' = \"")
+    StringBuilder queryBuilder = new StringBuilder(startQuery);
+    if (request.serviceName() != null && !request.serviceName().equalsIgnoreCase("all")) {
+      queryBuilder.append(" where \'localEndpoint.serviceName\' = \"")
           .append(request.serviceName())
           .append("\" | ");
     }
-    if (request.spanName() != null) {
-      query.append("  where name = \"")
+    if (request.spanName() != null && !request.spanName().equalsIgnoreCase("all")) {
+      queryBuilder.append("  where name = \"")
           .append(request.spanName())
           .append("\" | ");
     }
-    if (request.remoteServiceName() != null) {
-      query.append(" where \'remoteEndpoint.serviceName\' = \"")
+    if (request.remoteServiceName() != null && !request.remoteServiceName()
+        .equalsIgnoreCase("all")) {
+      queryBuilder.append(" where \'remoteEndpoint.serviceName\' = \"")
           .append(request.remoteServiceName())
           .append("\" | ");
     }
     for (Map.Entry<String, String> tag : request.annotationQuery().entrySet()) {
-      query.append(" where \'tags.").append(tag.getKey()).append("\' = \"")
+      queryBuilder.append(" where \'tags.").append(tag.getKey()).append("\' = \"")
           .append(tag.getValue())
           .append("\" | ");
     }
     if (request.minDuration() != null) {
-      query.append(" where duration > ")
+      queryBuilder.append(" where duration > ")
           .append(request.minDuration())
           .append(" | ");
     }
     if (request.maxDuration() != null) {
-      query.append(" where duration < ")
+      queryBuilder.append(" where duration < ")
           .append(request.maxDuration())
           .append(" | ");
     }
-    query.append(endQuery);
-    return new GetTracesCall(storage, query.toString());
+    queryBuilder.append(endQuery);
+    final String query = queryBuilder.toString();
+    LOG.debug("Splunk query: {}", query);
+    return new GetTracesCall(storage, query);
   }
 
   static class GetTracesCall extends RawSplunkSearchCall<List<Span>> {
