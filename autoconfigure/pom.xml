@@ -24,7 +24,7 @@
     <version>0.1.0-SNAPSHOT</version>
   </parent>
 
-  <artifactId>zipkin-storage-splunk-autoconfigure</artifactId>
+  <artifactId>zipkin-autoconfigure-storage-splunk</artifactId>
 
   <properties>
     <main.basedir>${project.basedir}/..</main.basedir>
@@ -50,4 +50,18 @@
     </dependency>
   </dependencies>
 
+  <build>
+    <plugins>
+      <plugin>
+        <groupId>org.springframework.boot</groupId>
+        <artifactId>spring-boot-maven-plugin</artifactId>
+        <configuration>
+          <!-- https://github.com/spring-projects/spring-boot/issues/3426 transitive exclude doesn't work -->
+          <excludeGroupIds>
+            io.zipkin.zipkin2,io.zipkin.reporter2,org.springframework.boot,org.springframework,com.fasterxml.jackson.core,com.google.auto.value,com.google.gson
+          </excludeGroupIds>
+        </configuration>
+      </plugin>
+    </plugins>
+  </build>
 </project>

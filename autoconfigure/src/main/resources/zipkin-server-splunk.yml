@@ -1,0 +1,12 @@
+# When enabled, this allows shorter env properties (ex -Dspring.profiles.active=voltdb)
+zipkin:
+  storage:
+    splunk:
+      scheme: ${SPLUNK_SCHEME:https}
+      host: ${SPLUNK_HOST:localhost}
+      port: ${SPLUNK_PORT:8089}
+      username: ${SPLUNK_USERNAME:user}
+      password: ${SPLUNK_PASSWORD:changeme}
+      index_name: ${SPLUNK_INDEX_NAME:zipkin}
+      source_type: ${SPLUNK_SOURCE_TYPE:span}
+      source: ${SPLUNK_SOURCE_TYPE:zipkin-server}
