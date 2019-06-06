@@ -43,7 +43,7 @@
 
     <!-- must match (ex. use spring-boot used by zipkin-server) -->
     <zipkin.version>2.14.0</zipkin.version>
-    <spring-boot.version>2.1.4.RELEASE</spring-boot.version>
+    <spring-boot.version>2.1.5.RELEASE</spring-boot.version>
 
     <splunk-sdk.version>1.6.5.0</splunk-sdk.version>
 

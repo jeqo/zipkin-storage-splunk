@@ -76,7 +76,7 @@ public class SplunkStorage extends StorageComponent {
   public static class Builder extends StorageComponent.Builder {
 
     String scheme = "https";
-    String host;
+    String host = "localhost";
     int port = 8089;
     String username;
     String password;
