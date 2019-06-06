@@ -20,7 +20,9 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.util.ArrayList;
 import java.util.Collections;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 import zipkin2.Call;
 import zipkin2.Callback;
 import zipkin2.DependencyLink;
@@ -40,11 +42,46 @@ public class SplunkSpanStore implements SpanStore, ServiceAndSpanNames {
     this.storage = storage;
   }
 
-  @Override public Call<List<List<Span>>> getTraces(QueryRequest queryRequest) {
-    String query = "search * index=" + storage.indexName
-        + " sourcetype=" + storage.sourceType
-        + " | transaction traceId";
-    return new GetTracesCall(storage, query);
+  @Override public Call<List<List<Span>>> getTraces(QueryRequest request) {
+    String startQuery = "search * index=" + storage.indexName
+        + " sourcetype=" + storage.sourceType + ""
+        + " earliest=" + (request.lookback() / 1000) + ""
+        + " latest=" + (request.endTs() / 1000) + ""
+        + " | transaction traceId | ";
+    String endQuery = " head " + request.limit();
+    StringBuilder query = new StringBuilder(startQuery);
+    if (request.serviceName() != null) {
+      query.append(" where \'localEndpoint.serviceName\' = \"")
+          .append(request.serviceName())
+          .append("\" | ");
+    }
+    if (request.spanName() != null) {
+      query.append("  where name = \"")
+          .append(request.spanName())
+          .append("\" | ");
+    }
+    if (request.remoteServiceName() != null) {
+      query.append(" where \'remoteEndpoint.serviceName\' = \"")
+          .append(request.remoteServiceName())
+          .append("\" | ");
+    }
+    for (Map.Entry<String, String> tag : request.annotationQuery().entrySet()) {
+      query.append(" where \'tags.").append(tag.getKey()).append("\' = \"")
+          .append(tag.getValue())
+          .append("\" | ");
+    }
+    if (request.minDuration() != null) {
+      query.append(" where duration > ")
+          .append(request.minDuration())
+          .append(" | ");
+    }
+    if (request.maxDuration() != null) {
+      query.append(" where duration < ")
+          .append(request.maxDuration())
+          .append(" | ");
+    }
+    query.append(endQuery);
+    return new GetTracesCall(storage, query.toString());
   }
 
   static class GetTracesCall extends RawSplunkSearchCall<List<Span>> {
@@ -202,7 +239,7 @@ public class SplunkSpanStore implements SpanStore, ServiceAndSpanNames {
         .password("welcome1")
         .build();
     SpanStore spanStore = storage.spanStore();
-    List<Span> spans = spanStore.getTrace("000000000000000d").execute();
+    List<Span> spans = spanStore.getTrace("000000000000000e").execute();
     System.out.println(spans);
     ServiceAndSpanNames spanServiceNames = storage.serviceAndSpanNames();
     List<String> serviceNames = spanServiceNames.getServiceNames().execute();
@@ -211,10 +248,17 @@ public class SplunkSpanStore implements SpanStore, ServiceAndSpanNames {
     System.out.println(spanNames);
     List<String> remoteServiceNames = spanServiceNames.getRemoteServiceNames("service1").execute();
     System.out.println(remoteServiceNames);
+    Map<String, String> tags = new HashMap<>();
+    tags.put("test", "value1");
     List<List<Span>> result = spanStore.getTraces(QueryRequest.newBuilder()
+        .serviceName("service1")
+        .remoteServiceName("kafka")
         .spanName("span1")
+        .maxDuration(1001L)
+        .minDuration(1L)
+        .annotationQuery(tags)
         .limit(10)
-        .lookback(System.currentTimeMillis() - 1_000_000)
+        .lookback(System.currentTimeMillis() - 1_000_000_000)
         .endTs(System.currentTimeMillis())
         .build()).execute();
     System.out.println(result);

@@ -94,17 +94,20 @@ public class SplunkSpanConsumer implements SpanConsumer {
 
   public static void main(String[] args) throws Exception {
     Span span0 = Span.newBuilder()
-        .traceId("d")
+        .traceId("e")
         .id("a")
         .name("span2")
+        .duration(100)
         .remoteEndpoint(Endpoint.newBuilder().serviceName("kafka").build())
         .localEndpoint(Endpoint.newBuilder().serviceName("service1").build())
         .timestamp(System.currentTimeMillis())
         .build();
     Span span1 = Span.newBuilder()
-        .traceId("d")
+        .traceId("e")
         .id("c")
         .name("span1")
+        .duration(100)
+        .putTag("test", "value1")
         .localEndpoint(Endpoint.newBuilder().serviceName("service1").build())
         .timestamp(System.currentTimeMillis() + 2)
         .build();
