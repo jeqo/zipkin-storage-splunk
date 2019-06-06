@@ -10,7 +10,7 @@ services:
       - SPLUNK_START_ARGS=--accept-license
       - SPLUNK_PASSWORD=changeme
   zipkin:
-    image: jeqo/zipkin-storage-splunk
+    image: jeqo/zipkin-storage-splunk:0.1.0-SNAPSHOT
     build:
       context: .
     ports:
