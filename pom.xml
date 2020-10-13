@@ -47,7 +47,7 @@
 
     <splunk-sdk.version>1.6.5.0</splunk-sdk.version>
 
-    <junit.version>4.12</junit.version>
+    <junit.version>4.13.1</junit.version>
     <assertj.version>3.12.2</assertj.version>
   </properties>
 
